@@ -7,6 +7,8 @@
 #include "ClassView.h"
 #include "OutputWnd.h"
 #include "PropertiesWnd.h"
+#include "IOWorker.h"
+#include "StatusDlg.h"
 
 class CMainFrame : public CFrameWndEx
 {
@@ -56,6 +58,15 @@ protected:
 
 	BOOL CreateDockingWindows();
 	void SetDockingWindowIcons(BOOL bHiColorIcons);
+
+protected:
+	CIOWorker* m_pIO = nullptr;
+	CStatusDlg  m_dlg; // 모델리스 다이얼로그
+
+protected:
+	afx_msg void OnDestroy();
+	afx_msg LRESULT OnIoEvent(WPARAM, LPARAM);
+	afx_msg LRESULT OnMesReply(WPARAM, LPARAM);
 };
 
 

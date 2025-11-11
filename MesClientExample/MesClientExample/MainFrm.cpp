@@ -22,11 +22,14 @@ const UINT uiLastUserToolBarId = uiFirstUserToolBarId + iMaxUserToolbars - 1;
 
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_WM_CREATE()
+	ON_WM_DESTROY()
 	ON_COMMAND(ID_VIEW_CUSTOMIZE, &CMainFrame::OnViewCustomize)
 	ON_REGISTERED_MESSAGE(AFX_WM_CREATETOOLBAR, &CMainFrame::OnToolbarCreateNew)
 	ON_COMMAND_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnApplicationLook)
 	ON_UPDATE_COMMAND_UI_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnUpdateApplicationLook)
 	ON_WM_SETTINGCHANGE()
+	ON_MESSAGE(WM_IO_EVENT, &CMainFrame::OnIoEvent)
+	ON_MESSAGE(WM_MES_REPLY, &CMainFrame::OnMesReply)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -174,7 +177,25 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	CMFCToolBar::SetBasicCommands(lstBasicCommands);
 
+	// 모델리스 다이얼로그 띄우기
+	m_dlg.Create(IDD_STATUSDLG, this);
+	m_dlg.ShowWindow(SW_SHOW);
+
+	// 워커 시작 (MainFrame HWND로 알림 받게)
+	m_pIO = new CIOWorker(this->GetSafeHwnd());
+	m_pIO->start();
+
 	return 0;
+}
+
+void CMainFrame::OnDestroy()
+{
+	if (m_pIO) {
+		m_pIO->stop();
+		delete m_pIO;
+		m_pIO = nullptr;
+	}
+	CFrameWnd::OnDestroy();
 }
 
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
@@ -185,6 +206,20 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 	//  Window 클래스 또는 스타일을 수정합니다.
 
 	return TRUE;
+}
+
+LRESULT CMainFrame::OnIoEvent(WPARAM w, LPARAM l)
+{
+	if (m_dlg.GetSafeHwnd())
+		m_dlg.PostMessage(WM_IO_EVENT, w, l); 
+	return 0;
+}
+
+LRESULT CMainFrame::OnMesReply(WPARAM w, LPARAM l)
+{
+	if (m_dlg.GetSafeHwnd())
+		m_dlg.PostMessage(WM_MES_REPLY, w, l);
+	return 0;
 }
 
 BOOL CMainFrame::CreateDockingWindows()
