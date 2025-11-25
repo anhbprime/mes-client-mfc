@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "StatusDlg.h"
 #include "afxdialogex.h"
+#include "MesMessages.h"
+#include <memory>
 
 IMPLEMENT_DYNAMIC(CStatusDlg, CDialogEx)
 
@@ -9,6 +11,7 @@ CStatusDlg::~CStatusDlg() {}
 
 void CStatusDlg::DoDataExchange(CDataExchange* pDX) {
     CDialogEx::DoDataExchange(pDX);
+    DDX_Control(pDX, IDC_LIST1, list1);
 }
 
 BEGIN_MESSAGE_MAP(CStatusDlg, CDialogEx)
@@ -17,28 +20,64 @@ BEGIN_MESSAGE_MAP(CStatusDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 void CStatusDlg::AppendLine(const CString& s) {
-    // 간단히 타이틀에 누적 출력(실전은 리스트/에디트 컨트롤에 Append 권장)
-    CString now; now.Format(L"[Status] %s", s.GetString());
+    CString now; 
+    now.Format(L"[Status] %s", s.GetString());
     SetWindowText(now);
 }
 
 LRESULT CStatusDlg::OnIoEvent(WPARAM, LPARAM lParam) {
     auto* p = reinterpret_cast<IoEventPayload*>(lParam);
+
+    ASSERT_VALID(this);
+    ASSERT(list1.GetSafeHwnd() != nullptr);
+
+    CString s;
     if (p) {
-        CString s; s.Format(L"IOEvent id=%s signal=%s", p->id.GetString(), p->signal.GetString());
-        AppendLine(s);
+        TRACE(L"[OnIoEvent] p=%p id=%s signal=%s\n",
+            p,
+            p->id.GetString(),
+            p->signal.GetString());
+
+        s.Format(L"IOEvent id=%s signal=%s", p->id.GetString(), p->signal.GetString());
+        list1.AddString(s);
+        if (list1.GetCount() > 5) {
+            list1.DeleteString(5);
+        }
         delete p;
+    }
+    else {
+        TRACE(L"[OnIoEvent] p is null! lParam=%p\n", lParam);
     }
     return 0;
 }
 
-LRESULT CStatusDlg::OnMesReply(WPARAM, LPARAM lParam) {
-    auto* p = reinterpret_cast<MesReplyPayload*>(lParam);
-    if (p) {
-        CString s; s.Format(L"MESReply id=%s ok=%d detail=%s",
-            p->id.GetString(), p->ok, p->detail.GetString());
-        AppendLine(s);
-        delete p;
+LRESULT CStatusDlg::OnMesReply(WPARAM wParam, LPARAM lParam)
+{
+    auto op = static_cast<MesOpCode>(wParam);
+    std::unique_ptr<MesBase> msg(reinterpret_cast<MesBase*>(lParam));
+
+    switch (op)
+    {
+    case MesOpCode::RecipeDownload:
+    {
+        auto* p = static_cast<MesRecipeDownloadMsg*>(msg.get());
+
+        CString text;
+        text.Format(_T("Recipe: %S / Ver: %d"),
+            p->RecipeName().c_str(),
+            p->Version());
+
+        list1.AddString(text);
+
+        break;
     }
+    case MesOpCode::Alarm:
+    {
+        break;
+    }
+    default:
+        break;
+    }
+
     return 0;
 }

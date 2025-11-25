@@ -28,7 +28,9 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_COMMAND_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnApplicationLook)
 	ON_UPDATE_COMMAND_UI_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnUpdateApplicationLook)
 	ON_WM_SETTINGCHANGE()
+
 	ON_MESSAGE(WM_IO_EVENT, &CMainFrame::OnIoEvent)
+	ON_WM_TIMER()
 	ON_MESSAGE(WM_MES_REPLY, &CMainFrame::OnMesReply)
 END_MESSAGE_MAP()
 
@@ -181,9 +183,11 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_dlg.Create(IDD_STATUSDLG, this);
 	m_dlg.ShowWindow(SW_SHOW);
 
-	// 워커 시작 (MainFrame HWND로 알림 받게)
 	m_pIO = new CIOWorker(this->GetSafeHwnd());
 	m_pIO->start();
+
+	m_mesWorker.SetOwner(this->GetSafeHwnd());
+	SetTimer(TIMER_ID_MES_WORKER, 5000, nullptr);
 
 	return 0;
 }
@@ -198,6 +202,16 @@ void CMainFrame::OnDestroy()
 	CFrameWnd::OnDestroy();
 }
 
+void CMainFrame::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == TIMER_ID_MES_WORKER)
+	{
+		m_mesWorker.SimulateRecipeReply();
+	}
+
+	CFrameWnd::OnTimer(nIDEvent);
+}
+
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
 	if( !CFrameWndEx::PreCreateWindow(cs) )
@@ -210,15 +224,20 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 
 LRESULT CMainFrame::OnIoEvent(WPARAM w, LPARAM l)
 {
-	if (m_dlg.GetSafeHwnd())
-		m_dlg.PostMessage(WM_IO_EVENT, w, l); 
+	if (::IsWindow(m_dlg.GetSafeHwnd()))
+		m_dlg.SendMessage(WM_IO_EVENT, w, l); 
 	return 0;
 }
 
-LRESULT CMainFrame::OnMesReply(WPARAM w, LPARAM l)
+LRESULT CMainFrame::OnMesReply(WPARAM wParam, LPARAM lParam)
 {
-	if (m_dlg.GetSafeHwnd())
-		m_dlg.PostMessage(WM_MES_REPLY, w, l);
+	if (::IsWindow(m_dlg.GetSafeHwnd()))
+	{
+		m_dlg.SendMessage(WM_MES_REPLY, wParam, lParam);
+		return 0;
+	}
+
+	delete reinterpret_cast<MesBase*>(lParam);
 	return 0;
 }
 

@@ -185,6 +185,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ClassView.h" />
+    <ClInclude Include="MesMessages.h" />
+    <ClInclude Include="MesWorker.h" />
     <ClInclude Include="StatusDlg.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />

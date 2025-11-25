@@ -9,6 +9,9 @@
 #include "PropertiesWnd.h"
 #include "IOWorker.h"
 #include "StatusDlg.h"
+#include "MesWorker.h"
+
+constexpr UINT_PTR TIMER_ID_MES_WORKER = 1001;   // MES simulation timer
 
 class CMainFrame : public CFrameWndEx
 {
@@ -61,12 +64,15 @@ protected:
 
 protected:
 	CIOWorker* m_pIO = nullptr;
-	CStatusDlg  m_dlg; // 모델리스 다이얼로그
+	CStatusDlg  m_dlg;
+private:
+	MesWorker      m_mesWorker;    
 
 protected:
 	afx_msg void OnDestroy();
 	afx_msg LRESULT OnIoEvent(WPARAM, LPARAM);
-	afx_msg LRESULT OnMesReply(WPARAM, LPARAM);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg LRESULT OnMesReply(WPARAM wParam, LPARAM lParam);
 };
 
 

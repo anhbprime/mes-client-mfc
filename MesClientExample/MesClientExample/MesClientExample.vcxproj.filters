@@ -63,6 +63,12 @@
     <ClInclude Include="Messages.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="MesMessages.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="MesWorker.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MesClientExample.cpp">
