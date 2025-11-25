@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include <string>
 
-constexpr UINT WM_MES_REPLY = WM_APP + 1;
+constexpr UINT WM_MES_REPLY = WM_APP + 2;
 
 enum class MesOpCode : UINT
 {

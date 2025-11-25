@@ -12,6 +12,7 @@ CStatusDlg::~CStatusDlg() {}
 void CStatusDlg::DoDataExchange(CDataExchange* pDX) {
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_LIST1, list1);
+    DDX_Control(pDX, IDC_LIST2, list2);
 }
 
 BEGIN_MESSAGE_MAP(CStatusDlg, CDialogEx)
@@ -41,7 +42,7 @@ LRESULT CStatusDlg::OnIoEvent(WPARAM, LPARAM lParam) {
         s.Format(L"IOEvent id=%s signal=%s", p->id.GetString(), p->signal.GetString());
         list1.AddString(s);
         if (list1.GetCount() > 5) {
-            list1.DeleteString(5);
+            list1.DeleteString(0);
         }
         delete p;
     }
@@ -62,13 +63,19 @@ LRESULT CStatusDlg::OnMesReply(WPARAM wParam, LPARAM lParam)
     {
         auto* p = static_cast<MesRecipeDownloadMsg*>(msg.get());
 
+        TRACE(L"[OnMesReply] p=%p RecipeName=%s Version=%d\n",
+            p,
+            p->RecipeName().c_str(),
+            p->Version());
+
         CString text;
         text.Format(_T("Recipe: %S / Ver: %d"),
             p->RecipeName().c_str(),
             p->Version());
-
-        list1.AddString(text);
-
+        list2.AddString(text);
+        if (list2.GetCount() > 5) {
+            list2.DeleteString(0);
+        }
         break;
     }
     case MesOpCode::Alarm:

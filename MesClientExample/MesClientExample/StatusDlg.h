@@ -23,4 +23,5 @@ private:
     void AppendLine(const CString& s);
 public:
     CListBox list1;
+    CListBox list2;
 };

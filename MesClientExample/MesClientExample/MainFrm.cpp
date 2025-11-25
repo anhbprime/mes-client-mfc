@@ -30,7 +30,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_WM_SETTINGCHANGE()
 
 	ON_MESSAGE(WM_IO_EVENT, &CMainFrame::OnIoEvent)
-	ON_WM_TIMER()
 	ON_MESSAGE(WM_MES_REPLY, &CMainFrame::OnMesReply)
 END_MESSAGE_MAP()
 
@@ -187,7 +186,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_pIO->start();
 
 	m_mesWorker.SetOwner(this->GetSafeHwnd());
-	SetTimer(TIMER_ID_MES_WORKER, 5000, nullptr);
+	m_mesWorker.Start();
 
 	return 0;
 }
@@ -200,16 +199,6 @@ void CMainFrame::OnDestroy()
 		m_pIO = nullptr;
 	}
 	CFrameWnd::OnDestroy();
-}
-
-void CMainFrame::OnTimer(UINT_PTR nIDEvent)
-{
-	if (nIDEvent == TIMER_ID_MES_WORKER)
-	{
-		m_mesWorker.SimulateRecipeReply();
-	}
-
-	CFrameWnd::OnTimer(nIDEvent);
 }
 
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
@@ -225,7 +214,7 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 LRESULT CMainFrame::OnIoEvent(WPARAM w, LPARAM l)
 {
 	if (::IsWindow(m_dlg.GetSafeHwnd()))
-		m_dlg.SendMessage(WM_IO_EVENT, w, l); 
+		m_dlg.PostMessage(WM_IO_EVENT, w, l); 
 	return 0;
 }
 
@@ -233,7 +222,7 @@ LRESULT CMainFrame::OnMesReply(WPARAM wParam, LPARAM lParam)
 {
 	if (::IsWindow(m_dlg.GetSafeHwnd()))
 	{
-		m_dlg.SendMessage(WM_MES_REPLY, wParam, lParam);
+		m_dlg.PostMessage(WM_MES_REPLY, wParam, lParam);
 		return 0;
 	}
 

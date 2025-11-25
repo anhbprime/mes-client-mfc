@@ -25,7 +25,8 @@ private:
         using namespace std::chrono_literals;
         int seq = 0;
         while (!st.stop_requested()) {
-            std::this_thread::sleep_for(700ms);
+            std::this_thread::sleep_for(1500ms);
+            TRACE(L"[IoEventWorker] tick\n");
             
             // 가상 이벤트 생성
             auto* p = new IoEventPayload;
@@ -36,7 +37,7 @@ private:
         }
     }
 
-    HWND m_hNotify = nullptr;     // 알릴 대상(MainFrame)의 HWND
+    HWND m_hNotify = nullptr;
     std::jthread m_th;
     std::atomic<BOOL> m_running{ FALSE };
 };
